@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ダッシュボード</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --border: #e2e0d8;
+      --text: #1a1917;
+      --muted: #888580;
+      --accent: #2d5a4e;
+      --accent-light: #e8f0ee;
+      --danger: #c0392b;
+      --warn: #d68910;
+      --radius: 12px;
+      --mono: 'DM Mono', monospace;
+      --sans: 'Noto Sans JP', sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* ---- HEADER ---- */
+    header {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    #clock {
+      font-family: var(--mono);
+      font-size: 2.8rem;
+      font-weight: 300;
+      letter-spacing: -1px;
+      color: var(--text);
+      line-height: 1;
+    }
+    .date-info {
+      display: flex;
+      flex-direction: column;
+    }
+    #date { font-size: 0.95rem; color: var(--muted); }
+    #weekday { font-size: 0.8rem; color: var(--accent); font-weight: 500; letter-spacing: 0.05em; }
+
+    /* ---- GRID ---- */
+    .grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 16px;
+      height: calc(100vh - 120px);
+    }
+
+    /* ---- CARD ---- */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      overflow: hidden;
+    }
+    .card-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    /* ---- WEATHER ---- */
+    #weather-card {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .weather-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .weather-icon { font-size: 2.5rem; line-height: 1; }
+    .weather-temp {
+      font-family: var(--mono);
+      font-size: 2.2rem;
+      font-weight: 300;
+      color: var(--text);
+    }
+    .weather-temp span { font-size: 1rem; color: var(--muted); }
+    .weather-desc { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+    .weather-city { font-size: 0.8rem; color: var(--accent); font-weight: 500; }
+    .weather-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .weather-meta span { display: flex; align-items: center; gap: 4px; }
+    .forecast {
+      display: flex;
+      gap: 8px;
+    }
+    .forecast-day {
+      flex: 1;
+      text-align: center;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 10px 6px;
+    }
+    .forecast-day .f-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; }
+    .forecast-day .f-icon { font-size: 1.2rem; margin-bottom: 4px; }
+    .forecast-day .f-temps { font-family: var(--mono); font-size: 0.72rem; }
+    .f-max { color: var(--danger); }
+    .f-min { color: var(--accent); }
+
+    /* ---- NEWS ---- */
+    #news-card {
+      grid-column: 2;
+      grid-row: 1 / 3;
+      display: flex;
+      flex-direction: column;
+    }
+    #news-source {
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    #news-list {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .news-item {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      opacity: 0;
+      transform: translateY(6px);
+      animation: fadeUp 0.3s ease forwards;
+    }
+    .news-item:last-child { border-bottom: none; }
+    .news-num {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--border);
+      min-width: 18px;
+      padding-top: 2px;
+    }
+    .news-title {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--text);
+      text-decoration: none;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .news-title:hover { color: var(--accent); }
+
+    /* ---- CALENDAR PLACEHOLDER ---- */
+    #cal-card {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    .mini-cal {
+      width: 100%;
+    }
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .cal-month { font-size: 0.85rem; font-weight: 500; }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      text-align: center;
+    }
+    .cal-grid .dow {
+      font-size: 0.65rem;
+      color: var(--muted);
+      padding: 4px 0;
+    }
+    .cal-grid .day {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      padding: 5px 2px;
+      border-radius: 5px;
+      cursor: default;
+      color: var(--text);
+    }
+    .cal-grid .day.today {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 500;
+    }
+    .cal-grid .day.empty { color: transparent; }
+    .cal-grid .day.sun { color: var(--danger); }
+    .cal-grid .day.sat { color: #3674B5; }
+    .cal-grid .day.today.sun, .cal-grid .day.today.sat { color: #fff; }
+    .cal-grid .day.other-month { color: var(--border); }
+
+    /* ---- STATUS BAR ---- */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 20px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #27ae60;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .loading { color: var(--muted); font-size: 0.8rem; }
+    .error-msg { color: var(--danger); font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div id="clock">--:--:--</div>
+    <div class="date-info">
+      <div id="date">----年--月--日</div>
+      <div id="weekday">---曜日</div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- 天気 -->
+    <div class="card" id="weather-card">
+      <div class="card-label">天気 / Weather</div>
+      <div id="weather-content"><p class="loading">取得中…</p></div>
+    </div>
+
+    <!-- ニュース -->
+    <div class="card" id="news-card">
+      <div class="card-label">ニュース / News</div>
+      <div id="news-source"></div>
+      <div id="news-list"><p class="loading">取得中…</p></div>
+      <div class="status-bar">
+        <div class="status-dot"></div>
+        <span id="last-updated">--</span>
+      </div>
+    </div>
+
+    <!-- カレンダー -->
+    <div class="card" id="cal-card">
+      <div class="card-label">カレンダー</div>
+      <div id="cal-content"></div>
+    </div>
+  </div>
+
+<script>
+  // ---- 時計 ----
+  function updateClock(data) {
+    document.getElementById('clock').textContent = data.time;
+    document.getElementById('date').textContent = data.date;
+    document.getElementById('weekday').textContent = data.weekday;
+  }
+
+  async function fetchTime() {
+    try {
+      const r = await fetch('/api/time');
+      updateClock(await r.json());
+    } catch(e) {}
+  }
+
+  // ---- 天気 ----
+  async function fetchWeather() {
+    try {
+      const r = await fetch('/api/weather');
+      const d = await r.json();
+      if (d.error) {
+        document.getElementById('weather-content').innerHTML =
+          `<p class="error-msg">取得エラー: ${d.error}</p>`;
+        return;
+      }
+      const fc = d.forecast.map((f, i) => `
+        <div class="forecast-day" style="animation-delay:${i*0.05}s">
+          <div class="f-label">${f.label}</div>
+          <div class="f-icon">${f.icon}</div>
+          <div class="f-temps">
+            <span class="f-max">${f.max}°</span> / <span class="f-min">${f.min}°</span>
+          </div>
+        </div>`).join('');
+
+      document.getElementById('weather-content').innerHTML = `
+        <div class="weather-main">
+          <div class="weather-icon">${d.icon}</div>
+          <div>
+            <div class="weather-temp">${d.temp}<span>°C</span></div>
+            <div class="weather-desc">${d.desc}</div>
+            <div class="weather-city">📍 ${d.city}</div>
+          </div>
+        </div>
+        <div class="weather-meta">
+          <span>💧 湿度 ${d.humidity}%</span>
+          <span>💨 風速 ${d.wind} km/h</span>
+        </div>
+        <div class="forecast">${fc}</div>`;
+    } catch(e) {
+      document.getElementById('weather-content').innerHTML =
+        `<p class="error-msg">ネットワークエラー</p>`;
+    }
+  }
+
+  // ---- ニュース ----
+  async function fetchNews() {
+    try {
+      const r = await fetch('/api/news');
+      const d = await r.json();
+      if (d.error) {
+        document.getElementById('news-list').innerHTML =
+          `<p class="error-msg">取得エラー: ${d.error}</p>`;
+        return;
+      }
+      document.getElementById('news-source').textContent = d.source;
+      document.getElementById('news-list').innerHTML = d.items.map((item, i) => `
+        <div class="news-item" style="animation-delay:${i*0.04}s">
+          <div class="news-num">${String(i+1).padStart(2,'0')}</div>
+          <a class="news-title" href="${item.link}" target="_blank" rel="noopener">${item.title}</a>
+        </div>`).join('');
+      const now = new Date();
+      document.getElementById('last-updated').textContent =
+        `最終更新 ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+    } catch(e) {
+      document.getElementById('news-list').innerHTML =
+        `<p class="error-msg">ネットワークエラー</p>`;
+    }
+  }
+
+  // ---- カレンダー ----
+  function buildCalendar() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const today = now.getDate();
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+    let html = `<div class="mini-cal">
+      <div class="cal-header"><span class="cal-month">${year}年 ${monthNames[month]}</span></div>
+      <div class="cal-grid">
+        <div class="dow" style="color:var(--danger)">日</div>
+        <div class="dow">月</div><div class="dow">火</div>
+        <div class="dow">水</div><div class="dow">木</div>
+        <div class="dow">金</div>
+        <div class="dow" style="color:#3674B5">土</div>`;
+
+    // 空白セル
+    for (let i = 0; i < firstDay; i++) html += `<div class="day empty"></div>`;
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dow = (firstDay + d - 1) % 7;
+      const cls = [
+        'day',
+        d === today ? 'today' : '',
+        dow === 0 ? 'sun' : (dow === 6 ? 'sat' : ''),
+      ].filter(Boolean).join(' ');
+      html += `<div class="${cls}">${d}</div>`;
+    }
+    html += `</div></div>`;
+    document.getElementById('cal-content').innerHTML = html;
+  }
+
+  // ---- 初期化・定期更新 ----
+  fetchTime();
+  fetchWeather();
+  fetchNews();
+  buildCalendar();
+
+  setInterval(fetchTime, 1000);
+  setInterval(fetchWeather, 5 * 60 * 1000);   // 5分ごと
+  setInterval(fetchNews, 10 * 60 * 1000);      // 10分ごと
+  setInterval(buildCalendar, 60 * 60 * 1000);  // 1時間ごと
+</script>
+</body>
+</html>
